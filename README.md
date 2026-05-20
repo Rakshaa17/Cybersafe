@@ -23,7 +23,7 @@ An interactive web quiz app to test and improve cybersecurity knowledge, built w
 ## Deploy on GitHub Pages
 1. Go to repo **Settings → Pages**
 2. Set source to `main` branch → `/ (root)`
-3. Live at: `https://Rakshaa17.github.io/CyberSafe`
+3. Live at: `https://rakshaa17.github.io/Cybersafe/`
 
 ## Topics Covered
 | Topic | Questions |
