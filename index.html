@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberSafe – Cybersecurity Quiz</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#0b0f1a; --card:#141928; --primary:#00d4ff;
+      --success:#22c55e; --danger:#ff4f6e; --text:#e2e8f0; --muted:#94a3b8;
+      --border:rgba(0,212,255,0.15);
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+
+    /* HEADER */
+    header{
+      background:linear-gradient(135deg,#0f172a,#1e1b4b);
+      padding:1.5rem 2rem; text-align:center;
+      border-bottom:1px solid var(--border);
+    }
+    header h1{font-size:1.8rem; font-weight:800; color:var(--primary); letter-spacing:1px;}
+    header p{color:var(--muted); font-size:0.9rem; margin-top:0.4rem;}
+
+    /* CONTAINER */
+    .container{max-width:780px; margin:0 auto; padding:2rem 1.5rem;}
+
+    /* HOME SCREEN */
+    #home-screen{text-align:center;}
+    .shield{font-size:5rem; margin-bottom:1.5rem; display:block; animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+    #home-screen h2{font-size:1.8rem; font-weight:800; margin-bottom:0.8rem;}
+    #home-screen h2 span{color:var(--primary);}
+    #home-screen p{color:var(--muted); line-height:1.7; max-width:500px; margin:0 auto 2rem;}
+
+    .topic-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:2rem;}
+    .topic-card{
+      background:var(--card); border:1px solid var(--border); border-radius:12px;
+      padding:1.2rem; text-align:center; cursor:pointer; transition:all 0.3s;
+    }
+    .topic-card:hover,.topic-card.selected{
+      border-color:var(--primary); background:rgba(0,212,255,0.08); transform:scale(1.04);
+    }
+    .topic-card .icon{font-size:1.8rem; margin-bottom:0.5rem;}
+    .topic-card .name{font-size:0.83rem; font-weight:700; color:var(--text);}
+
+    .start-btn{
+      background:linear-gradient(135deg,#00d4ff,#6c63ff); color:#fff;
+      border:none; padding:1rem 3rem; border-radius:10px; font-size:1rem;
+      font-weight:700; cursor:pointer; transition:all 0.3s;
+    }
+    .start-btn:hover{transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,212,255,0.3);}
+
+    /* QUIZ SCREEN */
+    #quiz-screen{display:none;}
+    .progress-bar-wrap{background:rgba(255,255,255,0.08); border-radius:50px; height:8px; margin-bottom:0.7rem;}
+    .progress-bar{height:8px; background:linear-gradient(90deg,#00d4ff,#6c63ff); border-radius:50px; transition:width 0.4s;}
+    .progress-info{display:flex; justify-content:space-between; font-size:0.8rem; color:var(--muted); margin-bottom:1.5rem;}
+
+    .q-box{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:2rem; margin-bottom:1.5rem;}
+    .q-category{
+      display:inline-block; background:rgba(0,212,255,0.1); color:var(--primary);
+      font-size:0.75rem; font-weight:700; padding:0.25rem 0.8rem; border-radius:50px;
+      border:1px solid var(--border); margin-bottom:1rem;
+    }
+    .q-text{font-size:1.05rem; font-weight:600; line-height:1.6; margin-bottom:1.5rem;}
+    .options{display:grid; gap:0.75rem;}
+    .option{
+      background:rgba(255,255,255,0.03); border:1.5px solid var(--border);
+      border-radius:10px; padding:0.9rem 1.2rem; cursor:pointer;
+      font-size:0.92rem; text-align:left; color:var(--text);
+      transition:all 0.2s; display:flex; align-items:center; gap:0.8rem;
+    }
+    .option:hover:not(.disabled){border-color:var(--primary); background:rgba(0,212,255,0.06);}
+    .option.correct{border-color:var(--success); background:rgba(34,197,94,0.1); color:var(--success);}
+    .option.wrong{border-color:var(--danger); background:rgba(255,79,110,0.1); color:var(--danger);}
+    .option.disabled{cursor:default; pointer-events:none;}
+    .opt-letter{
+      width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.07);
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.78rem; font-weight:700; flex-shrink:0;
+    }
+
+    .explanation{
+      background:rgba(0,212,255,0.06); border:1px solid rgba(0,212,255,0.2);
+      border-radius:10px; padding:1rem 1.2rem; margin-top:1rem;
+      font-size:0.88rem; line-height:1.6; color:var(--text); display:none;
+    }
+    .explanation strong{color:var(--primary);}
+
+    .next-btn{
+      background:var(--primary); color:#0b0f1a; border:none; padding:0.85rem 2.5rem;
+      border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer;
+      width:100%; margin-top:0.5rem; display:none; transition:all 0.2s;
+    }
+    .next-btn:hover{background:#00b8d9;}
+
+    /* RESULT SCREEN */
+    #result-screen{display:none; text-align:center;}
+    .score-circle{
+      width:150px; height:150px; border-radius:50%;
+      border:6px solid var(--primary); margin:1.5rem auto;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:rgba(0,212,255,0.06); box-shadow:0 0 40px rgba(0,212,255,0.2);
+    }
+    .score-num{font-size:2.5rem; font-weight:900; color:var(--primary);}
+    .score-label{font-size:0.78rem; color:var(--muted);}
+    .result-msg{font-size:1.4rem; font-weight:700; margin:1rem 0 0.5rem;}
+    .result-sub{color:var(--muted); margin-bottom:2rem; font-size:0.92rem; line-height:1.6;}
+
+    .breakdown{background:var(--card); border-radius:14px; padding:1.5rem; margin-bottom:1.5rem; text-align:left;}
+    .breakdown h3{font-size:0.9rem; font-weight:700; color:var(--muted); margin-bottom:1rem; text-transform:uppercase; letter-spacing:1px;}
+    .brow{display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.88rem;}
+    .brow:last-child{border:none;}
+    .brow .correct-c{color:var(--success); font-weight:700;}
+    .brow .wrong-c{color:var(--danger); font-weight:700;}
+
+    .restart-btn{
+      background:linear-gradient(135deg,#00d4ff,#6c63ff); color:#fff;
+      border:none; padding:0.9rem 2.5rem; border-radius:10px; font-size:0.95rem;
+      font-weight:700; cursor:pointer; transition:all 0.3s;
+    }
+    .restart-btn:hover{transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,212,255,0.3);}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🔐 CyberSafe</h1>
+  <p>Test your cybersecurity knowledge</p>
+</header>
+
+<div class="container">
+
+  <!-- HOME SCREEN -->
+  <div id="home-screen">
+    <div style="padding:3rem 0 2rem;">
+      <span class="shield">🛡️</span>
+      <h2>How <span>Cyber-Aware</span> Are You?</h2>
+      <p>Take this quiz to test your knowledge of cybersecurity fundamentals — from phishing attacks to the CIA Triad and network security basics.</p>
+      <div class="topic-grid">
+        <div class="topic-card selected" data-topic="all" onclick="selectTopic(this,'all')">
+          <div class="icon">🌐</div><div class="name">All Topics</div>
+        </div>
+        <div class="topic-card" data-topic="cia" onclick="selectTopic(this,'cia')">
+          <div class="icon">🔒</div><div class="name">CIA Triad</div>
+        </div>
+        <div class="topic-card" data-topic="phishing" onclick="selectTopic(this,'phishing')">
+          <div class="icon">🎣</div><div class="name">Phishing</div>
+        </div>
+        <div class="topic-card" data-topic="network" onclick="selectTopic(this,'network')">
+          <div class="icon">🌐</div><div class="name">Network Security</div>
+        </div>
+        <div class="topic-card" data-topic="passwords" onclick="selectTopic(this,'passwords')">
+          <div class="icon">🔑</div><div class="name">Passwords</div>
+        </div>
+      </div>
+      <button class="start-btn" onclick="startQuiz()">Start Quiz 🚀</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="progress-info">
+      <span id="q-counter">Question 1 of 10</span>
+      <span id="score-live">Score: 0</span>
+    </div>
+    <div class="q-box">
+      <span class="q-category" id="q-category">Category</span>
+      <div class="q-text" id="q-text">Question text</div>
+      <div class="options" id="options-list"></div>
+      <div class="explanation" id="explanation"></div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question →</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="result-screen">
+    <div class="score-circle">
+      <div class="score-num" id="final-score"></div>
+      <div class="score-label">out of <span id="final-total"></span></div>
+    </div>
+    <div class="result-msg" id="result-msg"></div>
+    <div class="result-sub" id="result-sub"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="restart-btn" onclick="restart()">Try Again 🔄</button>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  // CIA TRIAD
+  { category: "CIA Triad", topic: "cia",
+    q: "What does the 'C' in CIA Triad stand for?",
+    options: ["Control","Confidentiality","Cryptography","Compliance"],
+    answer: 1,
+    explanation: "CIA Triad stands for Confidentiality, Integrity, and Availability — the three core principles of information security."
+  },
+  { category: "CIA Triad", topic: "cia",
+    q: "Which CIA Triad principle ensures data is not altered by unauthorized users?",
+    options: ["Confidentiality","Availability","Integrity","Authentication"],
+    answer: 2,
+    explanation: "Integrity ensures data remains accurate and unmodified. Checksums and hashing are common techniques to verify integrity."
+  },
+  { category: "CIA Triad", topic: "cia",
+    q: "A DDoS attack primarily targets which pillar of the CIA Triad?",
+    options: ["Confidentiality","Availability","Integrity","Non-repudiation"],
+    answer: 1,
+    explanation: "Distributed Denial of Service (DDoS) attacks flood a server with traffic, making a service unavailable — attacking Availability."
+  },
+  { category: "CIA Triad", topic: "cia",
+    q: "Which of the following is an example of maintaining Confidentiality?",
+    options: ["Regular backups","Encrypting data before transmission","Using RAID storage","Load balancing servers"],
+    answer: 1,
+    explanation: "Encryption ensures that only authorized parties can read the data, directly maintaining Confidentiality."
+  },
+  // PHISHING
+  { category: "Phishing", topic: "phishing",
+    q: "What is phishing?",
+    options: [
+      "A type of malware that encrypts files",
+      "A social engineering attack that tricks users into revealing sensitive info",
+      "A network scanning technique",
+      "A method to crack passwords"
+    ],
+    answer: 1,
+    explanation: "Phishing is a social engineering attack where attackers impersonate trusted entities via email or websites to steal credentials or data."
+  },
+  { category: "Phishing", topic: "phishing",
+    q: "Which of the following is a red flag indicating a phishing email?",
+    options: [
+      "Sent from a verified company domain",
+      "Urgent request asking you to click a link and enter your password",
+      "Contains your full correct name and address",
+      "Has proper grammar and professional tone"
+    ],
+    answer: 1,
+    explanation: "Urgency + request for credentials via a link is the classic phishing pattern. Legitimate services never ask for passwords via email."
+  },
+  { category: "Phishing", topic: "phishing",
+    q: "Spear phishing differs from regular phishing because it is:",
+    options: [
+      "Sent to thousands of random recipients",
+      "Specifically targeted at a particular individual or organization",
+      "Done via phone calls only",
+      "Launched using automated bots"
+    ],
+    answer: 1,
+    explanation: "Spear phishing is highly targeted — attackers research the victim and craft personalized messages to increase success rate."
+  },
+  // NETWORK SECURITY
+  { category: "Network Security", topic: "network",
+    q: "What is the purpose of a Firewall?",
+    options: [
+      "To encrypt all outgoing data",
+      "To monitor and filter incoming/outgoing network traffic based on rules",
+      "To detect viruses in downloaded files",
+      "To assign IP addresses to devices"
+    ],
+    answer: 1,
+    explanation: "A firewall acts as a gatekeeper — it filters network traffic based on predefined security rules to block unauthorized access."
+  },
+  { category: "Network Security", topic: "network",
+    q: "What does HTTPS provide over HTTP?",
+    options: [
+      "Faster load speeds",
+      "Encrypted communication using SSL/TLS",
+      "Larger bandwidth",
+      "Automatic virus scanning"
+    ],
+    answer: 1,
+    explanation: "HTTPS uses SSL/TLS to encrypt data between your browser and the server, preventing eavesdropping and man-in-the-middle attacks."
+  },
+  { category: "Network Security", topic: "network",
+    q: "Which protocol is used to assign IP addresses automatically to devices on a network?",
+    options: ["DNS","DHCP","FTP","SMTP"],
+    answer: 1,
+    explanation: "DHCP (Dynamic Host Configuration Protocol) automatically assigns IP addresses, subnet masks, and other network settings to devices."
+  },
+  { category: "Network Security", topic: "network",
+    q: "What does a VPN do?",
+    options: [
+      "Increases internet speed",
+      "Creates an encrypted tunnel for your network traffic",
+      "Scans your device for malware",
+      "Manages network passwords"
+    ],
+    answer: 1,
+    explanation: "A VPN (Virtual Private Network) encrypts your traffic and routes it through a secure server, protecting your privacy and data."
+  },
+  // PASSWORDS
+  { category: "Password Security", topic: "passwords",
+    q: "Which of the following is the STRONGEST password?",
+    options: ["password123","Raksha2004","T!g3r$@7kL#2","raksha@rrce"],
+    answer: 2,
+    explanation: "Strong passwords use a mix of uppercase, lowercase, numbers, and special characters and are at least 12 characters long."
+  },
+  { category: "Password Security", topic: "passwords",
+    q: "What is Multi-Factor Authentication (MFA)?",
+    options: [
+      "Using multiple passwords for one account",
+      "Verifying identity using two or more different factors",
+      "Sharing one password across multiple accounts",
+      "Encrypting your password"
+    ],
+    answer: 1,
+    explanation: "MFA requires multiple forms of verification (e.g., password + OTP + fingerprint), making it much harder for attackers to gain access."
+  },
+  { category: "Password Security", topic: "passwords",
+    q: "What is a password manager used for?",
+    options: [
+      "Creating strong Wi-Fi networks",
+      "Securely storing and generating unique passwords for all accounts",
+      "Blocking phishing websites",
+      "Scanning for malware"
+    ],
+    answer: 1,
+    explanation: "Password managers securely store all your credentials in an encrypted vault so you only need to remember one master password."
+  },
+];
+
+let selectedTopic = 'all';
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+let breakdown = {};
+
+function selectTopic(el, topic) {
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTopic = topic;
+}
+
+function startQuiz() {
+  questions = selectedTopic === 'all'
+    ? shuffle([...ALL_QUESTIONS])
+    : shuffle(ALL_QUESTIONS.filter(q => q.topic === selectedTopic));
+
+  if (questions.length === 0) { alert('No questions for this topic yet!'); return; }
+  questions = questions.slice(0, Math.min(10, questions.length));
+
+  current = 0; score = 0; answered = false; breakdown = {};
+
+  document.getElementById('home-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('progress-bar').style.width = `${((current) / questions.length) * 100}%`;
+  document.getElementById('q-counter').textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById('score-live').textContent = `Score: ${score}`;
+  document.getElementById('q-category').textContent = q.category;
+  document.getElementById('q-text').textContent = q.q;
+
+  const letters = ['A','B','C','D'];
+  document.getElementById('options-list').innerHTML = q.options.map((opt, i) =>
+    `<button class="option" onclick="selectAnswer(${i})">
+      <span class="opt-letter">${letters[i]}</span>${opt}
+    </button>`
+  ).join('');
+
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+
+  options.forEach((opt, i) => {
+    opt.classList.add('disabled');
+    if (i === q.answer) opt.classList.add('correct');
+    else if (i === idx) opt.classList.add('wrong');
+  });
+
+  const cat = q.category;
+  if (!breakdown[cat]) breakdown[cat] = { correct: 0, total: 0 };
+  breakdown[cat].total++;
+
+  if (idx === q.answer) {
+    score++;
+    breakdown[cat].correct++;
+  }
+
+  document.getElementById('explanation').innerHTML = `<strong>💡 Explanation:</strong> ${q.explanation}`;
+  document.getElementById('explanation').style.display = 'block';
+  document.getElementById('next-btn').style.display = 'block';
+  document.getElementById('next-btn').textContent = current === questions.length - 1 ? 'See Results 🎯' : 'Next Question →';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) { showResult(); return; }
+  renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-total').textContent = questions.length;
+
+  let msg, sub;
+  if (pct >= 80) { msg = '🏆 Excellent! Cyber Champion!'; sub = "You have a strong grasp of cybersecurity fundamentals. Keep learning to master advanced concepts!"; }
+  else if (pct >= 60) { msg = '👍 Good Job! Keep Learning!'; sub = "You know the basics well. Review the topics you missed to strengthen your understanding."; }
+  else { msg = '📚 Keep Studying — You Got This!'; sub = "Cybersecurity is a journey. Review the CIA Triad, phishing tactics, and network basics to improve your score."; }
+
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+
+  document.getElementById('breakdown').innerHTML = `
+    <h3>Topic Breakdown</h3>
+    ${Object.entries(breakdown).map(([cat, data]) =>
+      `<div class="brow">
+        <span>${cat}</span>
+        <span>
+          <span class="correct-c">✓ ${data.correct}</span> /
+          <span class="wrong-c">✗ ${data.total - data.correct}</span>
+          &nbsp; (${Math.round((data.correct/data.total)*100)}%)
+        </span>
+      </div>`
+    ).join('')}
+  `;
+
+  document.getElementById('progress-bar').style.width = '100%';
+}
+
+function restart() {
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('home-screen').style.display = 'block';
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+</script>
+</body>
+</html>
